@@ -2,6 +2,13 @@
  * Advent of Code 2019 Day 2
  *
  * 1202 Program Alarm
+ *
+ * Remarks:
+ * The output turns out to be 250702 + 243000 * noun + verb,
+ * but analyzing that would've taken much longer than just brute forcing it. :3
+ * 
+ * The question hinted at adding more functionality to our IntCode machine,
+ * so I ended up abstracting more things than strictly required.
  */
 
 use std::iter::Iterator;
@@ -70,6 +77,7 @@ fn solve_part2(input: &IntCode) -> i32 {
     for noun in 0..100 {
         for verb in 0..100 {
             let mut program = input.clone();
+            println!("f({}, {}) = {}", noun, verb, program.execute(noun, verb));
             if program.execute(noun, verb) == 19690720 {
                 return 100 * noun + verb
             }

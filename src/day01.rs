@@ -2,6 +2,10 @@
  * Advent of Code 2019 Day 1
  *
  * The Tyranny of the Rocket Equation
+ *
+ * Remarks:
+ *  Nothing noteworthy, except I spent too much time debugging Part 2
+ *  because I read the question wrong :/
  */
 
 #[aoc_generator(day1)]

@@ -20,15 +20,15 @@ fn calc_fuel(x: i32) -> i32 {
 
 #[aoc(day1, part1)]
 fn solve_part1(input: &Vec<i32>) -> i32 {
-    input.iter().map(|&n| calc_fuel(n)).sum()
+    input.iter().map(|n| calc_fuel(*n)).sum()
 }
 
 #[aoc(day1, part2)]
 fn solve_part2(input: &Vec<i32>) -> i32 {
     input.iter()
-        .map(|&n| {
+        .map(|n| {
             let mut total_fuel = 0;
-            let mut fuel = n;
+            let mut fuel = *n;
             while fuel > 0 {
                 fuel = calc_fuel(fuel);
                 total_fuel += fuel;

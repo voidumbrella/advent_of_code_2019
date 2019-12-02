@@ -31,7 +31,7 @@ fn input_generator(input: &str) -> IntCode {
 } 
 
 impl IntCode {
-    fn get_args(&self) -> (usize, Vec<i32>) {
+    fn get_args(&self) -> Vec<i32> {
         let opcode = self.mem[self.ip];
         let num_params;
 
@@ -42,14 +42,14 @@ impl IntCode {
             _ => panic!("Invalid opcode {}", opcode),
         }
 
-        (num_params, self.mem[self.ip + 1..self.ip + 1 + num_params].to_vec())
+        self.mem[self.ip + 1..self.ip + 1 + num_params].to_vec()
     }
 
     fn execute(&mut self, noun: i32, verb: i32) -> i32 {
         self.mem[1] = noun;
         self.mem[2] = verb;
         loop {
-            let (num_params, args) = self.get_args();
+            let args = self.get_args();
             let opcode = self.mem[self.ip];
 
             match opcode {
@@ -59,7 +59,7 @@ impl IntCode {
                 _ => panic!("Invalid opcode {}", opcode),
             }
 
-            self.ip += num_params + 1;
+            self.ip += args.len() + 1;
         }
 
         self.mem[0]

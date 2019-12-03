@@ -43,7 +43,7 @@ fn solve_part2(input: &Vec<i32>) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day01::*;
+    use super::*;
 
     #[test]
     fn part1() {

@@ -38,7 +38,7 @@ fn solve_part2(input: OUTPUTTYPE) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day0n::*;
+    use super::*;
 
     #[test]
     fn part1() {

@@ -150,7 +150,7 @@ fn solve_part2(wires: &Vec<Vec<Turn>>) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day03::*;
+    use super::*;
 
     #[test]
     fn part1() {

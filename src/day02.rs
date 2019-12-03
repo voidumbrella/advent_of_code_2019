@@ -89,7 +89,7 @@ fn solve_part2(input: &IntCode) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day02::*;
+    use super::*;
 
     #[test]
     fn part1() {

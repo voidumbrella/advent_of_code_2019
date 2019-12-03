@@ -7,3 +7,14 @@ To solve a puzzle, run
 ```bash
 cargo aoc [-d day] [-p part]
 ```
+
+The tests can be ran with
+```bash
+cargo test
+```
+
+or 
+```bash
+cargo test day##
+```
+to run tests for a specific day, where ## is a two digit number for the date.

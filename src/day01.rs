@@ -9,7 +9,7 @@
  */
 
 #[aoc_generator(day1)]
-fn input_generator(input: &str) -> Vec<i32> {
+fn parse(input: &str) -> Vec<i32> {
     input
         .lines()
         .map(|line| {

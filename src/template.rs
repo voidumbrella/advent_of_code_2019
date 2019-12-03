@@ -7,7 +7,7 @@
 use regex::Regex;
 
 #[aoc_generator(dayn)]
-fn input_generator(input: &str)  {
+fn input_generator(input: &str) -> OUTPUTTYPE  {
     let re = Regex::new(r"^([0-9]{1,})x([0-9]{1,})x([0-9]{1,})$").unwrap();
 
     input
@@ -21,7 +21,7 @@ fn input_generator(input: &str)  {
 } 
 
 #[aoc(dayn, part1)]
-fn solve_part1(input: ) -> u32 {
+fn solve_part1(input: OUTPUTTYPE) -> i32 {
     input
         .iter()
         .map(|| {
@@ -29,7 +29,7 @@ fn solve_part1(input: ) -> u32 {
 }
 
 #[aoc(dayn, part2)]
-fn solve_part2(input: ) -> u32 {
+fn solve_part2(input: OUTPUTTYPE) -> i32 {
     input
         .iter()
         .map(|| {

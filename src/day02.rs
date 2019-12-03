@@ -20,7 +20,7 @@ struct IntCode {
 }
 
 #[aoc_generator(day2)]
-fn input_generator(input: &str) -> IntCode {
+fn parse(input: &str) -> IntCode {
     IntCode {
         ip: 0,
         mem: input

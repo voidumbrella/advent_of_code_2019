@@ -40,12 +40,7 @@ fn get_dxdy(direction: &TurnDirection) -> Point {
 }
 
 #[aoc_generator(day3)]
-/*
- * Returns a tuple.
- * First is a vector of intersection points.
- * Second element is a vector describing all the turns in each wire.
- */
-fn input_generator(input: &str) -> (Vec<Point>, Vec<Vec<Turn>>) {
+fn parse(input: &str) -> Vec<Vec<Turn>> {
     let re = Regex::new(r"([RUDL])([0-9]{1,})").unwrap();
 
     let mut wires: Vec<Vec<Turn>> = Vec::new();
@@ -70,12 +65,20 @@ fn input_generator(input: &str) -> (Vec<Point>, Vec<Vec<Turn>>) {
         )
     }
 
+    wires
+}
+
+fn distance(p: &Point) -> i32 {
+    (p.0).abs() + (p.1).abs()
+}
+
+fn find_collisions(a: &Vec<Turn>, b: &Vec<Turn>) -> Vec<Point> {
     let mut intersections: Vec<Point> = Vec::new();
 
     let mut points: HashSet<Point> = HashSet::new();
     {
         let mut cur = Point (0, 0);
-        for turn in wires[0].iter() {
+        for turn in a.iter() {
             let dxdy = get_dxdy(&turn.direction);
             for _i in 0..turn.distance {
                 cur.0 += dxdy.0;
@@ -87,7 +90,7 @@ fn input_generator(input: &str) -> (Vec<Point>, Vec<Vec<Turn>>) {
 
     {
         let mut cur = Point (0, 0);
-        for turn in wires[1].iter() {
+        for turn in b.iter() {
             let dxdy = get_dxdy(&turn.direction);
             for _i in 0..turn.distance {
                 cur.0 += dxdy.0;
@@ -99,16 +102,13 @@ fn input_generator(input: &str) -> (Vec<Point>, Vec<Vec<Turn>>) {
         }
     }
 
-    (intersections, wires)
-}
+    intersections
 
-fn distance(p: &Point) -> i32 {
-    (p.0).abs() + (p.1).abs()
 }
 
 #[aoc(day3, part1)]
-fn solve_part1(input: &(Vec<Point>, Vec<Vec<Turn>>)) -> i32 {
-    (input.0)
+fn solve_part1(wires: &Vec<Vec<Turn>>) -> i32 {
+    find_collisions(&wires[0], &wires[1])
         .iter()
         .map(|p| distance(&p))
         .min()
@@ -133,10 +133,10 @@ fn get_distance(wire: &Vec<Turn>, dest: &Point) -> i32 {
 }
 
 #[aoc(day3, part2)]
-fn solve_part2(input: &(Vec<Point>, Vec<Vec<Turn>>)) -> i32 {
+fn solve_part2(wires: &Vec<Vec<Turn>>) -> i32 {
     let mut min_distance = core::i32::MAX;
-    let intersections = &input.0;
-    let wires = &input.1;
+
+    let intersections = find_collisions(&wires[0], &wires[1]);
 
     for intersection in intersections.iter() {
         let first_distance = get_distance(&wires[0], intersection);

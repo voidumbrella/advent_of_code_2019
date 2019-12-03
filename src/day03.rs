@@ -45,7 +45,7 @@ fn parse(input: &str) -> Vec<Vec<Turn>> {
 
     let mut wires: Vec<Vec<Turn>> = Vec::new();
 
-    for line in input.lines() {
+    for line in input.lines().take(2) {
         wires.push(
             line
                 .split(',')
@@ -146,4 +146,53 @@ fn solve_part2(wires: &Vec<Vec<Turn>>) -> i32 {
     }
 
     min_distance
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::day03::*;
+
+    #[test]
+    fn part1() {
+        {
+            let input =
+            "R8,U5,L5,D3
+            U7,R6,D4,L4";
+            assert_eq!(solve_part1(&parse(input)), 6);
+        }
+        {
+            let input =
+            "R75,D30,R83,U83,L12,D49,R71,U7,L72
+            U62,R66,U55,R34,D71,R55,D58,R83";
+            assert_eq!(solve_part1(&parse(input)), 159);
+        }
+        {
+            let input =
+            "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51
+            U98,R91,D20,R16,D67,R40,U7,R15,U6,R7";
+            assert_eq!(solve_part1(&parse(input)), 135);
+        }
+    }
+
+    #[test]
+    fn part2() {
+        {
+            let input =
+            "R8,U5,L5,D3
+            U7,R6,D4,L4";
+            assert_eq!(solve_part2(&parse(input)), 30);
+        }
+        {
+            let input =
+            "R75,D30,R83,U83,L12,D49,R71,U7,L72
+            U62,R66,U55,R34,D71,R55,D58,R83";
+            assert_eq!(solve_part2(&parse(input)), 610);
+        }
+        {
+            let input =
+            "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51
+            U98,R91,D20,R16,D67,R40,U7,R15,U6,R7";
+            assert_eq!(solve_part2(&parse(input)), 410);
+        }
+    }
 }

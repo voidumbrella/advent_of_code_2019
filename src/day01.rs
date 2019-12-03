@@ -40,3 +40,24 @@ fn solve_part2(input: &Vec<i32>) -> i32 {
             total_fuel
         }).sum()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::day01::*;
+
+    #[test]
+    fn part1() {
+        {
+            assert_eq!(solve_part1(&parse("12")), 2);
+            assert_eq!(solve_part1(&parse("14\n1969\n100756")), 2 + 654 + 33583);
+        }
+    }
+
+    #[test]
+    fn part2() {
+        {
+            assert_eq!(solve_part2(&parse("14")), 2);
+            assert_eq!(solve_part2(&parse("1969\n100756")), 966 + 50346);
+        }
+    }
+}

@@ -45,9 +45,7 @@ impl IntCode {
         self.mem[self.ip + 1..self.ip + 1 + num_params].to_vec()
     }
 
-    fn execute(&mut self, noun: i32, verb: i32) -> i32 {
-        self.mem[1] = noun;
-        self.mem[2] = verb;
+    pub fn execute(&mut self) {
         loop {
             let args = self.get_args();
             let opcode = self.mem[self.ip];
@@ -61,15 +59,16 @@ impl IntCode {
 
             self.ip += args.len() + 1;
         }
-
-        self.mem[0]
     }
 }
 
 #[aoc(day2, part1)]
 fn solve_part1(input: &IntCode) -> i32 {
     let mut program = input.clone();
-    program.execute(12, 2)
+    program.mem[0] = 12;
+    program.mem[1] = 2;
+    program.execute();
+    program.mem[0]
 }
 
 #[aoc(day2, part2)]
@@ -77,11 +76,48 @@ fn solve_part2(input: &IntCode) -> i32 {
     for noun in 0..100 {
         for verb in 0..100 {
             let mut program = input.clone();
-            println!("f({}, {}) = {}", noun, verb, program.execute(noun, verb));
-            if program.execute(noun, verb) == 19690720 {
+            program.mem[0] = noun;
+            program.mem[1] = verb;
+            program.execute();
+            if program.mem[0] == 19690720 {
                 return 100 * noun + verb
             }
         }
     }
     panic!("Could not find suitable inputs!");
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::day02::*;
+
+    #[test]
+    fn part1() {
+        {
+            {
+                let mut program = parse("1,0,0,0,99");
+                program.execute();
+                assert_eq!(program.mem[0], 2);
+            }
+            {
+                let mut program = parse("2,3,0,3,99");
+                program.execute();
+                assert_eq!(program.mem[3], 6);
+            }
+            {
+                let mut program = parse("1,1,1,4,99,5,6,0,99");
+                program.execute();
+                assert_eq!(program.mem[0], 30);
+            }
+            {
+                let mut program = parse("1,9,10,3,2,3,11,0,99,30,40,50");
+                program.execute();
+                assert_eq!(program.mem[0], 3500);
+            }
+        }
+    }
+
+    #[test]
+    fn part2() {
+    }
 }

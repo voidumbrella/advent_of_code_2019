@@ -11,8 +11,6 @@
  * so I ended up abstracting more things than strictly required.
  */
 
-use std::iter::Iterator;
-
 #[derive(Clone)]
 struct IntCode {
     ip: usize,

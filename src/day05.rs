@@ -8,8 +8,6 @@
  *  Dealing with the immediate/position mode shenanigan was tricky though.
  */
 
-use std::iter::Iterator;
-
 #[derive(Clone)]
 struct IntCode {
     ip: usize,

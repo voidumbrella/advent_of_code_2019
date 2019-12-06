@@ -7,7 +7,7 @@
 use regex::Regex;
 
 #[aoc_generator(dayn)]
-fn input_generator(input: &str) -> OUTPUTTYPE  {
+fn parse(input: &str) -> OUTPUTTYPE  {
     let re = Regex::new(r"^([0-9]{1,})x([0-9]{1,})x([0-9]{1,})$").unwrap();
 
     input

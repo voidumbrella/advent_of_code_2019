@@ -2,6 +2,12 @@
  * Advent of Code 2019 Day 6
  *
  * Universal Orbit Map
+ *
+ * Remarks:
+ *  Graphs! Hacked together alogorithms!
+ *  The function that finds the lowest common ancestor was gently massaged without me knowing
+ *  wtf I'm doing until the compiler accepted it and it returned the correct answer for my inputs!
+ *  Fun!
  */
 
 use std::collections::HashMap;

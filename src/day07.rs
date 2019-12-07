@@ -5,19 +5,13 @@
  *
  * Remarks:
  *  First, I got lazy and downloaded a crate to handle the generation of permutations for me.
- *  Second, what the fuck was Part 2?
+ *  Second, what the heck was Part 2?
  *
  *  I handled the issue of inputs of amplifiers depending on outputs of others by
- *  adding an input queue into each machine, and having the input opcode return an enum
- *  indicating if IntCode machine is waiting for an input if the queue is empty.
- *  This is differentiated from other return values of regular outputs
- *  and an enum indicating the machine halted.
- *
+ *  having execute() return the state of the IntCode machine or its output.
  *  There are probably more elegant methods.
- *  Why didn't I just store these states in the struct for a simple finite state machine?
  *
- *  It'd be cool to make these machines run concurrently.
- *
+ *  It'd be nice to make these machines run concurrently?
  *  Also the fact that Rust allows for enums with arbitrary values in it is really cool!
  */
 
@@ -140,36 +134,23 @@ fn solve_part1(input: &IntCode) -> i32 {
     for phase_set in heap {
         let mut signal = 0;
 
-        let mut a = program.clone();
-        a.input_queue.push_back(phase_set[0]);
-        let mut b = program.clone();
-        b.input_queue.push_back(phase_set[1]);
-        let mut c = program.clone();
-        c.input_queue.push_back(phase_set[2]);
-        let mut d = program.clone();
-        d.input_queue.push_back(phase_set[3]);
-        let mut e = program.clone();
-        e.input_queue.push_back(phase_set[4]);
+        let mut programs = [
+            program.clone(),
+            program.clone(),
+            program.clone(),
+            program.clone(),
+            program.clone(),
+        ];
 
-        a.input_queue.push_back(signal);
-        if let IntCodeStatus::Output(s) = a.execute() { signal = s; }
-        else { panic!("Expected to receive output, but did not"); }
+        for i in 0..5 {
+            programs[i].input_queue.push_back(phase_set[i]);
+        }
 
-        b.input_queue.push_back(signal);
-        if let IntCodeStatus::Output(s) = b.execute() { signal = s; }
-        else { panic!("Expected to receive output, but did not"); }
-
-        c.input_queue.push_back(signal);
-        if let IntCodeStatus::Output(s) = c.execute() { signal = s; }
-        else { panic!("Expected to receive output, but did not"); }
-
-        d.input_queue.push_back(signal);
-        if let IntCodeStatus::Output(s) = d.execute() { signal = s; }
-        else { panic!("Expected to receive output, but did not"); }
-
-        e.input_queue.push_back(signal);
-        if let IntCodeStatus::Output(s) = e.execute() { signal = s; }
-        else { panic!("Expected to receive output, but did not"); }
+        for i in 0..5 {
+            programs[i].input_queue.push_back(signal);
+            if let IntCodeStatus::Output(s) = programs[i].execute() { signal = s; }
+            else { panic!("Expected to receive output, but did not"); }
+        }
 
         if maximum_signal < signal {
             maximum_signal = signal
@@ -188,48 +169,32 @@ fn solve_part2(input: &IntCode) -> i32 {
     for phase_set in heap {
         let mut signal = 0;
 
-        let mut a = program.clone();
-        a.input_queue.push_back(phase_set[0]);
-        let mut b = program.clone();
-        b.input_queue.push_back(phase_set[1]);
-        let mut c = program.clone();
-        c.input_queue.push_back(phase_set[2]);
-        let mut d = program.clone();
-        d.input_queue.push_back(phase_set[3]);
-        let mut e = program.clone();
-        e.input_queue.push_back(phase_set[4]);
+        let mut programs = [
+            program.clone(),
+            program.clone(),
+            program.clone(),
+            program.clone(),
+            program.clone(),
+        ];
 
+        for i in 0..5 {
+            programs[i].input_queue.push_back(phase_set[i]);
+        }
+
+        /*
+         * Each machine outputs a number and immediately passes control to the next.
+         * This ensures no machine will be stuck waiting for an input.
+         */
         'main: loop {
-            a.input_queue.push_back(signal);
-            loop {
-                if let IntCodeStatus::Output(s) = a.execute() { signal = s }
-                else { break; }
-            }
-
-            b.input_queue.push_back(signal);
-            loop {
-                if let IntCodeStatus::Output(s) = b.execute() { signal = s }
-                else { break; }
-            }
-
-            c.input_queue.push_back(signal);
-            loop {
-                if let IntCodeStatus::Output(s) = c.execute() { signal = s }
-                else { break; }
-            }
-
-            d.input_queue.push_back(signal);
-            loop {
-                if let IntCodeStatus::Output(s) = d.execute() { signal = s }
-                else { break; }
-            }
-
-            e.input_queue.push_back(signal);
-            loop {
-                match e.execute() {
-                    IntCodeStatus::Output(s) => signal = s,
-                    IntCodeStatus::WaitingInput => break,
-                    IntCodeStatus::Halt => break 'main, // All done if E halts
+            for i in 0..5 {
+                programs[i].input_queue.push_back(signal);
+                match programs[i].execute() {
+                    IntCodeStatus::Output(s) => { signal = s; }
+                    IntCodeStatus::WaitingInput => panic!("Deadlock reached"),
+                    IntCodeStatus::Halt => {
+                        // Feedback loop is over if the last machine halts
+                        if i == 4 { break 'main; }
+                    } 
                 }
             }
         }

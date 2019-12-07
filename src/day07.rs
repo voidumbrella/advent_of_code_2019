@@ -8,11 +8,15 @@
  *  Second, what the fuck was Part 2?
  *
  *  I handled the issue of inputs of amplifiers depending on outputs of others by
- *  adding an input queue into each machine, and if this is empty,
- *  having the input opcode return an enum indicating if the IntCode machine was waiting for an input.
- *  There are probably more elegant methods.
+ *  adding an input queue into each machine, and having the input opcode return an enum
+ *  indicating if IntCode machine is waiting for an input if the queue is empty.
+ *  This is differentiated from other return values of regular outputs
+ *  and an enum indicating the machine halted.
  *
- *  It'd be cool to make these machines run concurrently?
+ *  There are probably more elegant methods.
+ *  Why didn't I just store these states in the struct for a simple finite state machine?
+ *
+ *  It'd be cool to make these machines run concurrently.
  *
  *  Also the fact that Rust allows for enums with arbitrary values in it is really cool!
  */

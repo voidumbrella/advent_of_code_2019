@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 aoc-runner = "0.2.2"
 aoc-runner-derive = "0.2.2"
+permutohedron = "0.2.4"
 
 [dependencies.regex]
 version = "1.3"

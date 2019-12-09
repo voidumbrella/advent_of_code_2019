@@ -11,7 +11,7 @@
 #[derive(Clone)]
 struct IntCode {
     ip: usize,
-    mem: Vec<i32>
+    mem: Vec<i64>
 }
 
 #[aoc_generator(day5)]
@@ -26,32 +26,14 @@ fn parse(input: &str) -> IntCode {
 } 
 
 impl IntCode {
-    fn get_args(&self) -> Vec<i32> {
+
+    /*
+     * Returns a Vector containing indicies for the arguments of the current opcode.
+     */
+    fn get_args(&self) -> Vec<usize> {
         let instruction = self.mem[self.ip];
         let opcode = instruction % 100;
-        let mut modes = [(instruction / 100) % 10, (instruction / 1000) % 10, (instruction / 10000) % 10];
-
-        /*
-         * Hard coded hack
-         *
-         * The problem says the parameter for the instruction writes to will never be in immediate mode.
-         * But honestly, it makes everything simpler if they were immediate mode,
-         * so I flip the mode manually.
-         *
-         * Rationale:
-         *  Let's say we have a sample program `1101,100,-1,4,0` from the problem.
-         *  The `01` instruction is writing to address `4`, which is value given immediately!!
-         *  If it was in position mode (11101), then we'd be writing to address `0` because
-         *  that is the value at position `4`.
-         */
-        match opcode {
-            1 => modes[2] = 1,
-            2 => modes[2] = 1,
-            3 => modes[0] = 1,
-            7 => modes[2] = 1,
-            8 => modes[2] = 1,
-            _ => (),
-        }
+        let modes = [(instruction / 100) % 10, (instruction / 1000) % 10, (instruction / 10000) % 10];
 
         let num_params = match opcode {
             1 => 3, // {3} = {1} + {2}
@@ -66,16 +48,20 @@ impl IntCode {
             _ => panic!("Invalid opcode {}", opcode),
         };
 
-        let mut args: Vec<i32> = Vec::new();
+        let mut args: Vec<usize> = Vec::new();
         for i in 0..num_params {
             let x = self.mem[self.ip + 1 + i];
-            args.push(if modes[i] == 0 {self.mem[x as usize]} else { x });
+            args.push(match modes[i] {
+                0 => x as usize, // Address mode
+                1 => self.ip + 1 + i, // Immediate mode
+                x => panic!("Unknown parameter mode {}", x),
+            });
         }
         args
     }
 
-    pub fn execute(&mut self, input: i32) -> Vec<i32> {
-        let mut outputs: Vec<i32> = Vec::new();
+    pub fn execute(&mut self, input: i64) -> Vec<i64> {
+        let mut outputs: Vec<i64> = Vec::new();
         loop {
             let args = self.get_args();
             let instruction = self.mem[self.ip];
@@ -83,14 +69,14 @@ impl IntCode {
 
             self.ip += args.len() + 1;
             match opcode {
-                1 => self.mem[args[2] as usize] = args[0] + args[1],
-                2 => self.mem[args[2] as usize] = args[0] * args[1],
-                3 => self.mem[args[0] as usize] = input,
-                4 => outputs.push(args[0]),
-                5 => if args[0] != 0 { self.ip = args[1] as usize },
-                6 => if args[0] == 0 { self.ip = args[1] as usize },
-                7 => self.mem[args[2] as usize] = (args[0] < args[1]) as i32,
-                8 => self.mem[args[2] as usize] = (args[0] == args[1]) as i32,
+                1 => self.mem[args[2]] = self.mem[args[0]] + self.mem[args[1]],
+                2 => self.mem[args[2]] = self.mem[args[0]] * self.mem[args[1]],
+                3 => self.mem[args[0]] = input,
+                4 => outputs.push(self.mem[args[0]]),
+                5 => if self.mem[args[0]] != 0 { self.ip = self.mem[args[1]] as usize },
+                6 => if self.mem[args[0]] == 0 { self.ip = self.mem[args[1]] as usize },
+                7 => self.mem[args[2]] = (self.mem[args[0]] < self.mem[args[1]]) as i64,
+                8 => self.mem[args[2]] = (self.mem[args[0]] == self.mem[args[1]]) as i64,
                 99 => break,
                 _ => panic!("Invalid opcode {}", opcode),
             }
@@ -100,7 +86,7 @@ impl IntCode {
 }
 
 #[aoc(day5, part1)]
-fn solve_part1(input: &IntCode) -> i32 {
+fn solve_part1(input: &IntCode) -> i64 {
     let mut program = input.clone();
     let outputs = program.execute(1);
     println!("program outputs: {:?}", outputs);
@@ -108,7 +94,7 @@ fn solve_part1(input: &IntCode) -> i32 {
 }
 
 #[aoc(day5, part2)]
-fn solve_part2(input: &IntCode) -> i32 {
+fn solve_part2(input: &IntCode) -> i64 {
     let mut program = input.clone();
     let outputs = program.execute(5);
     println!("program outputs: {:?}", outputs);

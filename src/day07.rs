@@ -21,12 +21,12 @@ use std::collections::VecDeque;
 #[derive(Clone)]
 struct IntCode {
     ip: usize,
-    mem: Vec<i32>,
-    input_queue: VecDeque<i32>
+    mem: Vec<i64>,
+    input_queue: VecDeque<i64>
 }
 
 enum IntCodeStatus {
-    Output(i32),
+    Output(i64),
     Halt,
     WaitingInput,
 }
@@ -44,32 +44,14 @@ fn parse(input: &str) -> IntCode {
 }
 
 impl IntCode {
-    fn get_args(&self) -> Vec<i32> {
+
+    /*
+     * Returns a Vector containing indicies for the arguments of the current opcode.
+     */
+    fn get_args(&self) -> Vec<usize> {
         let instruction = self.mem[self.ip];
         let opcode = instruction % 100;
-        let mut modes = [(instruction / 100) % 10, (instruction / 1000) % 10, (instruction / 10000) % 10];
-
-        /*
-         * Hard coded hack
-         *
-         * The problem says the parameter for the instruction writes to will never be in immediate mode.
-         * But honestly, it makes everything simpler if they were immediate mode,
-         * so I flip the mode manually.
-         *
-         * Rationale:
-         *  Let's say we have a sample program `1101,100,-1,4,0` from the problem.
-         *  The `01` instruction is writing to address `4`, which is value given immediately!!
-         *  If it was in position mode (11101), then we'd be writing to address `0` because
-         *  that is the value at position `4`.
-         */
-        match opcode {
-            1 => modes[2] = 1,
-            2 => modes[2] = 1,
-            3 => modes[0] = 1,
-            7 => modes[2] = 1,
-            8 => modes[2] = 1,
-            _ => (),
-        }
+        let modes = [(instruction / 100) % 10, (instruction / 1000) % 10, (instruction / 10000) % 10];
 
         let num_params = match opcode {
             1 => 3, // {3} = {1} + {2}
@@ -84,10 +66,14 @@ impl IntCode {
             _ => panic!("Invalid opcode {}", opcode),
         };
 
-        let mut args: Vec<i32> = Vec::new();
+        let mut args: Vec<usize> = Vec::new();
         for i in 0..num_params {
             let x = self.mem[self.ip + 1 + i];
-            args.push(if modes[i] == 0 {self.mem[x as usize]} else { x });
+            args.push(match modes[i] {
+                0 => x as usize, // Address mode
+                1 => self.ip + 1 + i, // Immediate mode
+                x => panic!("Unknown parameter mode {}", x),
+            });
         }
         args
     }
@@ -100,22 +86,22 @@ impl IntCode {
 
             let mut new_ip = self.ip + args.len() + 1;
             match opcode {
-                1 => self.mem[args[2] as usize] = args[0] + args[1],
-                2 => self.mem[args[2] as usize] = args[0] * args[1],
+                1 => self.mem[args[2]] = self.mem[args[0]] + self.mem[args[1]],
+                2 => self.mem[args[2]] = self.mem[args[0]] * self.mem[args[1]],
                 3 => {
                     match self.input_queue.pop_front() {
-                        Some(input) => self.mem[args[0] as usize] = input,
+                        Some(input) => self.mem[args[0]] = input,
                         None => return IntCodeStatus::WaitingInput,
                     }
                 }
                 4 => {
                     self.ip = new_ip;
-                    return IntCodeStatus::Output(args[0]);
+                    return IntCodeStatus::Output(self.mem[args[0]]);
                 }
-                5 => if args[0] != 0 { new_ip = args[1] as usize },
-                6 => if args[0] == 0 { new_ip = args[1] as usize },
-                7 => self.mem[args[2] as usize] = (args[0] < args[1]) as i32,
-                8 => self.mem[args[2] as usize] = (args[0] == args[1]) as i32,
+                5 => if self.mem[args[0]] != 0 { new_ip = self.mem[args[1]] as usize },
+                6 => if self.mem[args[0]] == 0 { new_ip = self.mem[args[1]] as usize },
+                7 => self.mem[args[2]] = (self.mem[args[0]] < self.mem[args[1]]) as i64,
+                8 => self.mem[args[2]] = (self.mem[args[0]] == self.mem[args[1]]) as i64,
                 99 => return IntCodeStatus::Halt,
                 _ => panic!("Invalid opcode {}", opcode),
             }
@@ -125,7 +111,7 @@ impl IntCode {
 }
 
 #[aoc(day7, part1)]
-fn solve_part1(input: &IntCode) -> i32 {
+fn solve_part1(input: &IntCode) -> i64 {
     let program = input.clone();
     let mut maximum_signal = 0;
     let phases = &mut vec![0, 1, 2, 3, 4];
@@ -160,7 +146,7 @@ fn solve_part1(input: &IntCode) -> i32 {
 }
 
 #[aoc(day7, part2)]
-fn solve_part2(input: &IntCode) -> i32 {
+fn solve_part2(input: &IntCode) -> i64 {
     let program = input.clone();
     let mut maximum_signal = 0;
     let phases = &mut vec![5, 6, 7, 8, 9];

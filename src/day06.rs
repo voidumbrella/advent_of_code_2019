@@ -38,15 +38,10 @@ fn parse(input: &str) -> HashMap<String, Vec<String>>  {
 
 fn count_orbits(tree: &HashMap<String, Vec<String>>, s: &str, orbits: i32) -> i32 {
     let mut orbits = orbits;
-    match tree.get(s) {
-        Some(suborbits) => {
-            let mut subtree_orbits_sum = 0;
-            for sub in suborbits {
-                subtree_orbits_sum += count_orbits(tree, sub, orbits + 1);
-            }
-            orbits += subtree_orbits_sum;
-        }
-        None => (),
+    if let Some(suborbits) = tree.get(s) {
+        let mut subtree_orbits_sum = 0;
+        for sub in suborbits {  subtree_orbits_sum += count_orbits(tree, sub, orbits + 1); }
+        orbits += subtree_orbits_sum;
     }
     orbits
 }
@@ -64,18 +59,22 @@ fn find_lca(tree: &HashMap<String, Vec<String>>, root: &str, a: &str, b: &str) -
     };
 
     // Find the least common ancestor, using all the children as the new root.
-    let mut sub_lca: HashSet<String> = HashSet::new();
+    let mut sub_lcas: HashSet<String> = HashSet::new();
     for child in children {
         if let Some(lca) = find_lca(tree, child, &a, &b) {
             if lca != a && lca != b {
                 return Some(lca);
             }
-            sub_lca.insert(lca);
+            sub_lcas.insert(lca);
         }
-        if sub_lca.contains(a) && sub_lca.contains(b) { return Some(root.into()); }
+        if sub_lcas.contains(a) && sub_lcas.contains(b) { return Some(root.into()); }
     }
-    for i in sub_lca { return Some(i); } // set guaranteed to contain exactly one or zero element here
-    None
+
+    // ???
+    match sub_lcas.iter().next() {
+        None => None,
+        Some(s) => Some(s.clone())
+    }
 }
 
 fn get_distance(tree: &HashMap<String, Vec<String>>, root: &str, needle: &str) -> i32 {
@@ -86,10 +85,8 @@ fn get_distance(tree: &HashMap<String, Vec<String>>, root: &str, needle: &str) -
     while !v.is_empty() {
         let current = v.pop_front().unwrap();
         if current.0 == needle { return current.1; }
-        else {
-            if let Some(sub) = tree.get(&current.0) {
-                for node in sub { v.push_back((node.into(), current.1 + 1)); }
-            }
+        else if let Some(sub) = tree.get(&current.0) {
+            for node in sub { v.push_back((node.into(), current.1 + 1)); }
         }
     }
     panic!("Could not find {}", needle);

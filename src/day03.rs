@@ -72,7 +72,7 @@ fn distance(p: &Point) -> i32 {
     (p.0).abs() + (p.1).abs()
 }
 
-fn find_collisions(a: &Vec<Turn>, b: &Vec<Turn>) -> Vec<Point> {
+fn find_collisions(a: &[Turn], b: &[Turn]) -> Vec<Point> {
     let mut intersections: Vec<Point> = Vec::new();
 
     let mut points: HashSet<Point> = HashSet::new();
@@ -107,7 +107,7 @@ fn find_collisions(a: &Vec<Turn>, b: &Vec<Turn>) -> Vec<Point> {
 }
 
 #[aoc(day3, part1)]
-fn solve_part1(wires: &Vec<Vec<Turn>>) -> i32 {
+fn solve_part1(wires: &[Vec<Turn>]) -> i32 {
     find_collisions(&wires[0], &wires[1])
         .iter()
         .map(|p| distance(&p))
@@ -115,7 +115,7 @@ fn solve_part1(wires: &Vec<Vec<Turn>>) -> i32 {
         .unwrap()
 }
 
-fn get_distance(wire: &Vec<Turn>, dest: &Point) -> i32 {
+fn get_distance(wire: &[Turn], dest: &Point) -> i32 {
     let mut cur = Point (0, 0);
     let mut distance = 0;
     for turn in wire.iter() {
@@ -133,7 +133,7 @@ fn get_distance(wire: &Vec<Turn>, dest: &Point) -> i32 {
 }
 
 #[aoc(day3, part2)]
-fn solve_part2(wires: &Vec<Vec<Turn>>) -> i32 {
+fn solve_part2(wires: &[Vec<Turn>]) -> i32 {
     let mut min_distance = core::i32::MAX;
 
     let intersections = find_collisions(&wires[0], &wires[1]);

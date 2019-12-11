@@ -1,8 +1,11 @@
 /*
  * Advent of Code 2019 Day 9
  *
+ * Sensor Boost
  *
  * Remarks:
+ *  Another IntCode problem??
+ *  At least it made me refactor some stuff.
  */
 
 use std::collections::VecDeque;
@@ -61,9 +64,9 @@ impl IntCode {
         };
 
         let mut args: Vec<usize> = Vec::new();
-        for i in 0..num_params {
+        for (i, mode) in modes.iter().enumerate().take(num_params) {
             let x = self.mem[self.ip + 1 + i];
-            args.push(match modes[i] {
+            args.push(match mode {
                 0 => x as usize, // Address mode
                 1 => self.ip + 1 + i, // Immediate mode
                 2 => (self.relative_base + x) as usize, // Relative mode
@@ -132,7 +135,7 @@ fn solve_part2(input: &IntCode) -> i64 {
 
     program.input_queue.push_back(2);
     match program.execute() {
-        IntCodeStatus::Output(n) => return n,
+        IntCodeStatus::Output(n) => n,
         IntCodeStatus::Halt => panic!("Premature halt"),
         IntCodeStatus::WaitingInput => panic!("This should not be waiting for input"),
     }

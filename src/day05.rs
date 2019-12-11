@@ -49,9 +49,9 @@ impl IntCode {
         };
 
         let mut args: Vec<usize> = Vec::new();
-        for i in 0..num_params {
+        for (i, mode) in modes.iter().enumerate().take(num_params) {
             let x = self.mem[self.ip + 1 + i];
-            args.push(match modes[i] {
+            args.push(match mode {
                 0 => x as usize, // Address mode
                 1 => self.ip + 1 + i, // Immediate mode
                 x => panic!("Unknown parameter mode {}", x),

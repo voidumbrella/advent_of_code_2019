@@ -67,9 +67,9 @@ impl IntCode {
         };
 
         let mut args: Vec<usize> = Vec::new();
-        for i in 0..num_params {
+        for (i, mode) in modes.iter().enumerate().take(num_params) {
             let x = self.mem[self.ip + 1 + i];
-            args.push(match modes[i] {
+            args.push(match mode {
                 0 => x as usize, // Address mode
                 1 => self.ip + 1 + i, // Immediate mode
                 x => panic!("Unknown parameter mode {}", x),
@@ -128,13 +128,13 @@ fn solve_part1(input: &IntCode) -> i64 {
             program.clone(),
         ];
 
-        for i in 0..5 {
-            programs[i].input_queue.push_back(phase_set[i]);
+        for (i, program) in programs.iter_mut().enumerate() {
+            program.input_queue.push_back(phase_set[i]);
         }
 
-        for i in 0..5 {
-            programs[i].input_queue.push_back(signal);
-            if let IntCodeStatus::Output(s) = programs[i].execute() { signal = s; }
+        for program in &mut programs {
+            program.input_queue.push_back(signal);
+            if let IntCodeStatus::Output(s) = program.execute() { signal = s; }
             else { panic!("Expected to receive output, but did not"); }
         }
 
@@ -172,9 +172,9 @@ fn solve_part2(input: &IntCode) -> i64 {
          * This ensures no machine will be stuck waiting for an input.
          */
         'main: loop {
-            for i in 0..5 {
-                programs[i].input_queue.push_back(signal);
-                match programs[i].execute() {
+            for (i, program) in programs.iter_mut().enumerate() {
+                program.input_queue.push_back(signal);
+                match program.execute() {
                     IntCodeStatus::Output(s) => { signal = s; }
                     IntCodeStatus::WaitingInput => panic!("Deadlock reached"),
                     IntCodeStatus::Halt => {

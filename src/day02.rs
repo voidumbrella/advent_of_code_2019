@@ -77,7 +77,7 @@ fn solve_part2(input: &IntCode) -> i32 {
             program.mem[0] = noun;
             program.mem[1] = verb;
             program.execute();
-            if program.mem[0] == 19690720 {
+            if program.mem[0] == 19_690_720 {
                 return 100 * noun + verb
             }
         }

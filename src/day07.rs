@@ -8,7 +8,7 @@
  *  Second, what the heck was Part 2?
  *
  *  I handled the issue of inputs of amplifiers depending on outputs of others by
- *  having execute() return the state of the IntCode machine or its output.
+ *  having execute() return the state of the intcode::IntCode machine or its output.
  *  There are probably more elegant methods.
  *
  *  It'd be nice to make these machines run concurrently?
@@ -18,100 +18,23 @@
 use permutohedron;
 use std::collections::VecDeque;
 
-#[derive(Clone)]
-struct IntCode {
-    ip: usize,
-    mem: Vec<i64>,
-    input_queue: VecDeque<i64>
-}
-
-enum IntCodeStatus {
-    Output(i64),
-    Halt,
-    WaitingInput,
-}
+use crate::intcode;
 
 #[aoc_generator(day7)]
-fn parse(input: &str) -> IntCode {
-    IntCode {
+fn parse(input: &str) -> intcode::IntCode {
+    intcode::IntCode {
         ip: 0,
         mem: input
             .split(',')
             .map(|n| { n.parse().unwrap() })
             .collect(),
         input_queue: VecDeque::new(),
-    }
-}
-
-impl IntCode {
-
-    /*
-     * Returns a Vector containing indicies for the arguments of the current opcode.
-     */
-    fn get_args(&self) -> Vec<usize> {
-        let instruction = self.mem[self.ip];
-        let opcode = instruction % 100;
-        let modes = [(instruction / 100) % 10, (instruction / 1000) % 10, (instruction / 10000) % 10];
-
-        let num_params = match opcode {
-            1 => 3, // {3} = {1} + {2}
-            2 => 3, // {3} = {1} * {2}
-            3 => 1, // {1} = input
-            4 => 1, // output {4}
-            5 => 2, // jump to {2} if {1} != 0
-            6 => 2, // jump to {2} if {1} == 0
-            7 => 3, // {3} = ({1} < {2})
-            8 => 3, // {3} = ({1} == {2})
-            99 => 0, // halt
-            _ => panic!("Invalid opcode {}", opcode),
-        };
-
-        let mut args: Vec<usize> = Vec::new();
-        for (i, mode) in modes.iter().enumerate().take(num_params) {
-            let x = self.mem[self.ip + 1 + i];
-            args.push(match mode {
-                0 => x as usize, // Address mode
-                1 => self.ip + 1 + i, // Immediate mode
-                x => panic!("Unknown parameter mode {}", x),
-            });
-        }
-        args
-    }
-
-    pub fn execute(&mut self) -> IntCodeStatus {
-        loop {
-            let args = self.get_args();
-            let instruction = self.mem[self.ip];
-            let opcode = instruction % 100;
-
-            let mut new_ip = self.ip + args.len() + 1;
-            match opcode {
-                1 => self.mem[args[2]] = self.mem[args[0]] + self.mem[args[1]],
-                2 => self.mem[args[2]] = self.mem[args[0]] * self.mem[args[1]],
-                3 => {
-                    match self.input_queue.pop_front() {
-                        Some(input) => self.mem[args[0]] = input,
-                        None => return IntCodeStatus::WaitingInput,
-                    }
-                }
-                4 => {
-                    self.ip = new_ip;
-                    return IntCodeStatus::Output(self.mem[args[0]]);
-                }
-                5 => if self.mem[args[0]] != 0 { new_ip = self.mem[args[1]] as usize },
-                6 => if self.mem[args[0]] == 0 { new_ip = self.mem[args[1]] as usize },
-                7 => self.mem[args[2]] = (self.mem[args[0]] < self.mem[args[1]]) as i64,
-                8 => self.mem[args[2]] = (self.mem[args[0]] == self.mem[args[1]]) as i64,
-                99 => return IntCodeStatus::Halt,
-                _ => panic!("Invalid opcode {}", opcode),
-            }
-            self.ip = new_ip;
-        }
+        relative_base: 0,
     }
 }
 
 #[aoc(day7, part1)]
-fn solve_part1(input: &IntCode) -> i64 {
+fn solve_part1(input: &intcode::IntCode) -> i64 {
     let program = input.clone();
     let mut maximum_signal = 0;
     let phases = &mut vec![0, 1, 2, 3, 4];
@@ -134,7 +57,7 @@ fn solve_part1(input: &IntCode) -> i64 {
 
         for program in &mut programs {
             program.input_queue.push_back(signal);
-            if let IntCodeStatus::Output(s) = program.execute() { signal = s; }
+            if let intcode::Status::Output(s) = program.execute() { signal = s; }
             else { panic!("Expected to receive output, but did not"); }
         }
 
@@ -146,7 +69,7 @@ fn solve_part1(input: &IntCode) -> i64 {
 }
 
 #[aoc(day7, part2)]
-fn solve_part2(input: &IntCode) -> i64 {
+fn solve_part2(input: &intcode::IntCode) -> i64 {
     let program = input.clone();
     let mut maximum_signal = 0;
     let phases = &mut vec![5, 6, 7, 8, 9];
@@ -175,9 +98,9 @@ fn solve_part2(input: &IntCode) -> i64 {
             for (i, program) in programs.iter_mut().enumerate() {
                 program.input_queue.push_back(signal);
                 match program.execute() {
-                    IntCodeStatus::Output(s) => { signal = s; }
-                    IntCodeStatus::WaitingInput => panic!("Deadlock reached"),
-                    IntCodeStatus::Halt => {
+                    intcode::Status::Output(s) => { signal = s; }
+                    intcode::Status::WaitingInput => panic!("Deadlock reached"),
+                    intcode::Status::Halt => {
                         // Feedback loop is over if the last machine halts
                         if i == 4 { break 'main; }
                     } 

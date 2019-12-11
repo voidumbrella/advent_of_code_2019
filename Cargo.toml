@@ -4,13 +4,8 @@ version = "0.1.0"
 authors = ["voidumbrella <voidumbrella@gmail.com>"]
 edition = "2018"
 
-[profile.dev]
-opt-level = 0
-
-[profile.bench]
-opt-level = 3
-
 [dependencies]
+num = "0.2.0"
 aoc-runner = "0.2.2"
 aoc-runner-derive = "0.2.2"
 permutohedron = "0.2.4"

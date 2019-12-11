@@ -36,8 +36,6 @@ fn parse(input: &str) -> intcode::IntCode  {
     i
 }
 
-#[derive (PartialEq, Eq, Hash, Clone)]
-struct Coord { x: i64, y: i64 }
 #[derive (PartialEq, Eq)]
 enum Color { 
     Black,

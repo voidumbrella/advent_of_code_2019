@@ -9,8 +9,9 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 
-type Reactions = HashMap<String, (i32, Vec<(String, i32)>)>;
+type Reactions = HashMap<String, (u32, Vec<(String, u32)>)>;
 
 #[aoc_generator(day14)]
 fn parse(input: &str) -> Reactions {
@@ -22,69 +23,65 @@ fn parse(input: &str) -> Reactions {
 
         let caps = re.captures(v[1]).unwrap();
         let product = caps[2].parse().unwrap();
-        let num_produced = caps[1].parse().unwrap();
+        let products_produced = caps[1].parse().unwrap();
 
-        let mut reagents: Vec<(String, i32)> = Vec::new();
+        let mut reagents: Vec<(String, u32)> = Vec::new();
         for reagent in v[0].split(",") {
             let caps = re.captures(reagent).unwrap();
             reagents.push((caps[2].parse().unwrap(), caps[1].parse().unwrap()));
         }
-        reactions.insert(product, (num_produced, reagents));
+        reactions.insert(product, (products_produced, reagents));
     }
     reactions
 }
 
+fn ceil_div(a: u32, b: u32) -> u32 {
+    a / b + if a % b == 0 { 0 } else { 1 }
+}
+
 #[aoc(day14, part1)]
-fn solve_part1(input: &Reactions) -> i32 {
-    // Stores chemicals that must be produced
-    let mut goal: HashMap<String, i32> = HashMap::new();
-    // Stores chemicals that were produced as excess
-    let mut pool: HashMap<String, i32> = HashMap::new();
-    goal.insert("FUEL".to_string(), 1);
+fn solve_part1(input: &Reactions) -> u32 {
     let mut total_ore = 0;
 
-    while !goal.is_empty() {
-        let mut new_goal: HashMap<String, i32> = HashMap::new();
-        
-        for (product, &needed) in goal.iter() {
-            let mut needed = needed;
-            if let Some(&left) = pool.get(product) {
-                needed -= left;
-                pool.insert(product.to_string(), std::cmp::max(0, left - needed));
-            }
-            if needed <= 0 { continue; }
+    // Stores chemicals that must be produced
+    let mut queue: VecDeque<(String, u32)> = VecDeque::new();
+    // Stores chemicals that were produced as excess
+    let mut pool: HashMap<String, u32> = HashMap::new();
+    queue.push_back(("FUEL".to_string(), 1));
 
-            let (product_coef, reagents) = input.get(product).unwrap();
-            let num_reactions = (needed + product_coef - 1) / product_coef; // ceiling div
-            let num_produced = num_reactions * product_coef;
-
-            let excess = num_produced - needed;
-            if excess > 0 {
-                // Add any excess products to pool
-                *pool.entry(product.to_string()).or_insert(0) += excess;
-            }
-
-            for (reagent, coef) in reagents {
-                let num_reagent = coef * num_reactions;
-                if reagent == "ORE" {
-                    total_ore += num_reagent;
-                    continue;
-                } 
-                let left = match pool.get(reagent) {
-                    None => 0,
-                    Some(&x) => x,
-                };
-                *new_goal.entry(reagent.to_string()).or_insert(0) += num_reagent - left;
-                pool.insert(reagent.to_string(), std::cmp::max(0, left - num_reagent));
+    while !queue.is_empty() {
+        let (product, mut products_needed) = queue.pop_front().unwrap();
+        if let Some(&leftover) = pool.get(&product) {
+            if leftover > products_needed {
+                pool.insert(product.clone(), leftover - products_needed);
+                products_needed = 0;
+            } else {
+                pool.insert(product.clone(), 0);
+                products_needed -= leftover;
             }
         }
-        goal = new_goal;
+        if products_needed == 0 { continue; }
+
+        let (product_per_reaction, reagents) = input.get(&product).unwrap();
+        let num_reactions = ceil_div(products_needed, *product_per_reaction);
+        let products_produced = product_per_reaction * num_reactions;
+
+        // Add any excess products to pool
+        if products_produced > products_needed {
+            *pool.entry(product.clone()).or_insert(0) += products_produced - products_needed;
+        }
+
+        for (reagent, reagent_per_reaction) in reagents {
+            let reagent_needed = reagent_per_reaction * num_reactions;
+            if reagent == "ORE" { total_ore += reagent_needed; }
+            else { queue.push_back((reagent.clone(), reagent_needed)); }
+        }
     }
     total_ore
 }
 
 // #[aoc(day14, part2)]
-// fn solve_part2(input: &i32) -> i32 {
+// fn solve_part2(input: &u32) -> u32 {
     // input
         // .iter()
         // .map(|| {

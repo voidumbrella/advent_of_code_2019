@@ -34,7 +34,7 @@ fn parse(input: &str) -> intcode::IntCode {
 }
 
 #[aoc(day19, part1)]
-fn solve_part1(input: &intcode::IntCode) -> i32 {
+fn solve_part1(input: &intcode::IntCode) -> i64 {
     let mut count = 0;
     for y in 0..50 {
         for x in 0..50 {

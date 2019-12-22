@@ -4,7 +4,8 @@
  * Slam Shuffle
  *
  * Remarks:
- *  I can't math
+ *  I can't math.
+ *  I learned some basic modular arithmetic from this though so yay
  */
 
 use regex::Regex;
@@ -43,7 +44,7 @@ fn solve_part1(input: &Vec<Operation>) -> i128 {
 
     for operation in input.iter().cloned() {
         match operation {
-            Operation::NewStack => index = deck_size - 1 - index,
+            Operation::NewStack => index = (-index - 1) % deck_size,
             Operation::Cut(n) => index = (index - n) % deck_size,
             Operation::Deal(n) => index = (index * n) % deck_size,
         }
@@ -51,30 +52,27 @@ fn solve_part1(input: &Vec<Operation>) -> i128 {
     index
 }
 
-fn mod_inv(mut a: i128, mut base: i128) -> i128 {
-    if base == 1 {
-        return 0;
-    }
+fn modulo(x: i128, m: i128) -> i128 {
+    ((x % m) + m) % m
+}
 
-    let orig = base;
-
-    let mut x = 1;
-    let mut y = 0;
-
-    while a > 1 {
-        let q = a / base;
-        let tmp = base;
-        base = a % base;
-        a = tmp;
-        let tmp = y;
-        y = x - q * y;
-        x = tmp;
-    }
-
-    if x < 0 {
-        x + orig
+// Returns (g, x, y) such that a * x + b * y = g = gcd(a, b)
+fn egcd(a: i128, b: i128) -> (i128, i128, i128) {
+    if a == 0 {
+        return (b, 0, 1)
     } else {
-        x
+        let (g, x, y) = egcd(modulo(b, a), a);
+        return (g, y - (b / a) * x, x)
+    }
+}
+
+// Returns x such that ax = 1 (mod m)
+fn mod_inv(a: i128, m: i128) -> i128 {
+    let (g, x, _) = egcd(a, m);
+    if g == 1 {
+        return modulo(x, m);
+    } else {
+        panic!("modular inverse of {} and {} not found", a, m);
     }
 }
 
@@ -89,43 +87,35 @@ fn mod_exp(b: i128, e: i128, m: i128) -> i128 {
     }
 }
 
-// Reverse shuffle
-fn f(ops: &Vec<Operation>, x: i128, deck_size: i128) -> i128 {
-    let mut index = x;
-
-    for operation in ops.iter().rev().cloned() {
-        match operation {
-            Operation::NewStack => index = deck_size - 1 - index,
-            Operation::Cut(n) => index = (index + n) % deck_size,
-            Operation::Deal(n) => index = (index * mod_inv(n, deck_size)) % deck_size,
-        }
-    }
-    index
-}
-
-
 #[aoc(day22, part2)]
 fn solve_part2(input: &Vec<Operation>) -> i128 {
-    assert_eq!(f(input, 7545, 10007), 2019);
-    let m = 119315717514047;
-    let n = 101741582076661;
 
-    // Find A and B such that Ax + B = f(x) (mod m)
-    let x_0 = 2020;
-    let x_1 = f(input, x_0, m);
-    let x_2 = f(input, x_1, m);
+    let m = 119315717514047; // deck size
+    let n = 101741582076661; // loops
 
-    // x_1 = a * x_0 + b (mod m)
-    // x_2 = a * x_1 + b (mod m)
-    // x_2 - x_1 = a * x_1 - x_0 (mod m)
-    // (x_2 - x_1) / (x_1 - x_0) = a (mod m)
-    let a = ((x_2 - x_1) * mod_inv(x_1 - x_0, m)) % m;
+    // Find a and b such that ay + b (mod m) = x,
+    // where y is the position after a round of shuffling and x is the original position
+    let mut a = 1;
+    let mut b = 0;
+    for operation in input.iter().rev().cloned() {
+        match operation {
+            Operation::NewStack => {
+                a = -a;
+                b = -b - 1;
+            }
+            Operation::Cut(n) => {
+                b += n;
+            }
+            Operation::Deal(n) => {
+                let temp = mod_inv(n, m);
+                a *= temp;
+                b *= temp;
+            }
+        }
+        a = modulo(a, m);
+        b = modulo(b, m);
+    }
 
-    // x_1 = a * x_0 + b (mod m)
-    // x_1 - a * x_0 = b (mod m)
-    let b = (x_1 - a * x_0) % m;
-    assert_eq!((a * x_0 + b) % m, x_1);
-    
     // ax + b
     // a^2x + ab + b
     // a^3x + a^2b + ab + b
@@ -134,7 +124,9 @@ fn solve_part2(input: &Vec<Operation>) -> i128 {
     //
     // Taking mod m,
     // y = (a^n * x mod m) + b * ((a^n - 1) / (a - 1) mod m)
-    // 
-    // Then take (y + m) % m because % is actually remainder and not modulo
-    ((mod_exp(a, n, m) * x_0 + b * ((mod_exp(a, n, m) - 1) * mod_inv(a - 1, m) % m)) % m + m) % m
+    //                           |------------------|
+    //                             must be moduloed
+    //                           to prevent overflow!
+    let p = mod_exp(a, n, m) * 2020 + b * modulo((mod_exp(a, n, m) - 1) * mod_inv(a - 1, m), m);
+    modulo(p, m)
 }
